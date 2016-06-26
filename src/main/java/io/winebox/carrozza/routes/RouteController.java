@@ -1,3 +1,157 @@
+package io.winebox.carrozza.routes;
+
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.graphhopper.GHRequest;
+import com.graphhopper.GHResponse;
+import com.graphhopper.PathWrapper;
+import com.graphhopper.util.Instruction;
+import com.graphhopper.util.shapes.GHPoint;
+import io.winebox.carrozza.models.CZCoordinate;
+import io.winebox.carrozza.services.routing.RoutingEngine;
+import jsprit.core.util.VehicleRoutingTransportCostsMatrix;
+import lombok.Getter;
+import lombok.Setter;
+import spark.Request;
+import spark.Response;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public final class RouteController {
+
+    private final static class Service {
+        private @Getter @Setter String id;
+        private @Getter @Setter CZCoordinate coordinate;
+
+        @JsonIgnore
+        public boolean isValid() {
+            return !id.isEmpty() && coordinate.isValid();
+        }
+
+        @JsonCreator
+        Service(@JsonProperty("id") String id, @JsonProperty("coordinate") CZCoordinate coordinate) {
+            this.id = id;
+            this.coordinate = coordinate;
+        }
+    }
+
+    private final static class Shipment {
+        private @Getter @Setter String id;
+        private @Getter @Setter CZCoordinate pickupCoordinate;
+        private @Getter @Setter CZCoordinate deliveryCoordinate;
+
+        @JsonIgnore
+        public boolean isValid() {
+            return !id.isEmpty() && pickupCoordinate.isValid() && deliveryCoordinate.isValid();
+        }
+
+        @JsonCreator
+        Shipment(@JsonProperty("id") String id, @JsonProperty("pickup_coordinate") CZCoordinate pickupCoordinate, @JsonProperty("delivery_coordinate") CZCoordinate deliveryCoordinate) {
+            this.id = id;
+            this.pickupCoordinate = pickupCoordinate;
+            this.deliveryCoordinate = deliveryCoordinate;
+        }
+    }
+
+    private final static class CreateRoutePayload {
+        private @Getter @Setter List<Service> services;
+        private @Getter @Setter List<Shipment> shipments;
+
+        @JsonIgnore
+        public boolean isValid() {
+            if (services.isEmpty() && shipments.isEmpty()) return false;
+            for (final Service service : services) if (!service.isValid()) return false;
+            for (final Shipment shipment : shipments) if (!shipment.isValid()) return false;
+            return true;
+        }
+    }
+
+    public final static String createRoute(Request request, Response response ) {
+        try {
+            response.type("application/json");
+            final ObjectMapper mapper = new ObjectMapper();
+            final CreateRoutePayload payload;
+            try {
+                payload = mapper.readValue(request.body(), CreateRoutePayload.class);
+            } catch (Exception e) {
+                response.status(400);
+                return "{\"code\": \"BX\"}";
+            }
+            if (!payload.isValid()) {
+                response.status(422);
+                return "{\"code\": \"BM\"}";
+            }
+            final List<GHPoint> hopperPoints = Stream.concat(
+                    payload.getServices().stream()
+                            .map((service) -> service.getCoordinate()),
+                    payload.getShipments().stream()
+                            .map((shipment) -> Stream.of(shipment.getPickupCoordinate(), shipment.getDeliveryCoordinate()))
+                            .flatMap(x -> x)
+                    ).map((coordinate) -> new GHPoint(coordinate.getLatitude(), coordinate.getLongitude()))
+                    .collect(Collectors.toList());
+
+            final VehicleRoutingTransportCostsMatrix.Builder matrixBuilder = VehicleRoutingTransportCostsMatrix.Builder.newInstance(false);
+
+
+            return "";
+
+//            final GHRequest hopperRequest = new GHRequest(hopperPoints);
+//            final GHResponse hopperResponse = RoutingEngine.getHopper().route(hopperRequest);
+//            if (hopperResponse.hasErrors()) {
+//                response.status(500);
+//                return "{\"code\": \"UE\"}";
+//            }
+//            final PathWrapper path = hopperResponse.getBest();
+//            JsonObject json = new JsonObject();
+//            JsonObject tourJSON = new JsonObject()
+//                    .set("distance", path.getDistance())
+//                    .set("time", path.getTime() / 1000.);
+//
+//
+//            JsonArray instructions = new JsonArray();
+//            for (Instruction instruction : path.getInstructions()) {
+//                JsonObject instructionJSON = new JsonObject();
+//                if (!instruction.getName().isEmpty()) {
+//                    instructionJSON.set("text", instruction.getName());
+//                }
+//                instructionJSON.set("distance", instruction.getDistance());
+//                instructionJSON.set("time", instruction.getTime() / 1000.);
+//                JsonArray points = new JsonArray();
+//                for (GHPoint point : instruction.getPoints()) {
+//                    JsonObject pointJSON = new JsonObject();
+//                    pointJSON.set("latitude", point.getLat());
+//                    pointJSON.set("longitude", point.getLat());
+//                    points.add(pointJSON);
+//                }
+//                instructionJSON.set("points", points);
+//
+//                JsonObject extra = new JsonObject();
+//                for (Map.Entry<String, Object> entry : instruction.getExtraInfoJSON().entrySet()) {
+//                    extra.set(entry.getKey(), entry.getValue().toString());
+//                }
+//                instructionJSON.set("extra", extra);
+//                instructions.add(instructionJSON);
+//            }
+//            tourJSON.set("instructions", instructions);
+//            json.set("tour", tourJSON);
+//            response.status(200);
+//            return json.toString();
+        } catch (Exception e) {
+            System.out.println(e);
+            response.status(500);
+            return "{\"code\": \"UE\"}";
+        }
+    }
+}
+
+
 //package io.winebox.carrozza.routes;
 //
 //import jsprit.analysis.toolbox.GraphStreamViewer;
