@@ -3,6 +3,8 @@ package io.winebox.carrozza.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jsprit.core.problem.Location;
+import jsprit.core.problem.job.Service;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +18,11 @@ public final class CZCoordinate {
 
     @JsonIgnore
     public boolean isValid() {
-        return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+        return getLatitude() >= -90 && getLatitude() <= 90 && getLongitude() >= -180 && getLongitude() <= 180;
+    }
+
+    public Location toJSprit() {
+        return Location.newInstance(getLatitude(), getLongitude());
     }
 
     CZCoordinate(

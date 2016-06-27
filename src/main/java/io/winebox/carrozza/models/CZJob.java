@@ -1,7 +1,10 @@
 package io.winebox.carrozza.models;
 
 import com.fasterxml.jackson.annotation.*;
+import jsprit.core.problem.job.Job;
 import lombok.*;
+
+import java.util.List;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
@@ -15,8 +18,12 @@ public abstract class CZJob {
 
     @JsonIgnore
     public boolean isValid() {
-        return !id.isEmpty();
+        return !getId().isEmpty();
     }
+
+    public abstract List<CZCoordinate> getCoordinates();
+
+    public abstract Job toJSprit();
 
     CZJob( String id ) {
         this.id = id;
