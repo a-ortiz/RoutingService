@@ -16,6 +16,8 @@ import com.graphhopper.util.shapes.GHPoint;
 import io.winebox.carrozza.models.CZCoordinate;
 import io.winebox.carrozza.services.routing.RoutingEngine;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 import lombok.Getter;
@@ -83,19 +85,21 @@ public final class TourController {
                 final JsonArray points = new JsonArray();
                 for (GHPoint point : instruction.getPoints()) {
                     points.add(new JsonObject()
-                        .set("latitude", point.getLat())
-                        .set("longitude", point.getLat()));
+                        .set("latitude", new BigDecimal(point.getLat()).setScale(5, RoundingMode.HALF_UP).doubleValue())
+                        .set("longitude", new BigDecimal(point.getLat()).setScale(5, RoundingMode.HALF_UP).doubleValue())
+                    );
                 }
                 instructions.add(new JsonObject()
                     .set("text", Helper.firstBig(instruction.getTurnDescription(translation)))
-                    .set("distance", instruction.getDistance())
-                    .set("time", instruction.getTime() / 1000.)
-                    .set("points", points));
+                    .set("distance", Math.round(instruction.getDistance()))
+                    .set("time", Math.round(instruction.getTime() / 1000.))
+                    .set("points", points)
+                );
             }
             final JsonObject json = new JsonObject()
                 .set("tour", new JsonObject()
-                    .set("distance", path.getDistance())
-                    .set("time", path.getTime() / 1000.)
+                    .set("distance", Math.round(path.getDistance()))
+                    .set("time", Math.round(path.getTime() / 1000.))
                     .set("instructions", instructions)
                 );
             return json.toString();

@@ -1,5 +1,6 @@
 package io.winebox.carrozza.routes;
 
+import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -21,6 +22,7 @@ import jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import jsprit.core.algorithm.box.SchrimpfFactory;
 import jsprit.core.problem.Location;
 import jsprit.core.problem.VehicleRoutingProblem;
+import jsprit.core.problem.cost.VehicleRoutingActivityCosts;
 import jsprit.core.problem.job.Job;
 import jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import jsprit.core.problem.solution.route.VehicleRoute;
@@ -35,6 +37,8 @@ import lombok.Setter;
 import spark.Request;
 import spark.Response;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 public final class RouteController {
@@ -84,6 +88,7 @@ public final class RouteController {
             VehicleImpl vehicle1 = VehicleImpl.Builder.newInstance("car_1")
                     .setType(vehicleType1)
                     .setStartLocation(Location.newInstance(-2.114648, -79.869998))
+                    .setReturnToDepot(false)
                     .build();
 
             final List<Job> jobs = new ArrayList();
@@ -126,28 +131,75 @@ public final class RouteController {
                 .addVehicle(vehicle1)
                 .build();
 
+
+
             VehicleRoutingAlgorithm algorithm = new SchrimpfFactory().createAlgorithm(vehicleRoutingProblem);
             Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
-            VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
-            System.out.println(bestSolution.getCost());
-            System.out.println(bestSolution.getUnassignedJobs());
-            for (VehicleRoute route : bestSolution.getRoutes()) {
-//                route.
-                for (TourActivity actitvity : route.getActivities()) {
-                    System.out.println(actitvity.getArrTime());
-                    System.out.println(actitvity.getEndTime());
-                    System.out.println(actitvity.getLocation());
-                    System.out.println(actitvity.getName());
+            VehicleRoutingProblemSolution solution = Solutions.bestOf(solutions);
+            final JsonArray routes = new JsonArray();
+            for (VehicleRoute route : solution.getRoutes()) {
+                double costs = 0;
+                TourActivity previousActivity = route.getStart();
+                final JsonArray activities = new JsonArray();
+                activities.add(new JsonObject()
+                    .set("job_id", Json.NULL)
+                    .set("activity", route.getStart().getName())
+                    .set("time", new JsonObject()
+                        .set("start", Json.NULL)
+                        .set("end", Math.round(route.getStart().getEndTime() / 1000.))
+                    )
+                    .set("cost", 0)
+                );
+                for (TourActivity activity : route.getActivities()) {
+                    String jobId;
+                    if (activity instanceof TourActivity.JobActivity) {
+                        jobId = ((TourActivity.JobActivity) activity).getJob().getId();
+                    } else {
+                        jobId = null;
+                    }
+                    double cost = vehicleRoutingProblem.getTransportCosts().getTransportCost(previousActivity.getLocation(), activity.getLocation(), previousActivity.getEndTime(), route.getDriver(),
+                            route.getVehicle());
+                    cost += vehicleRoutingProblem.getActivityCosts().getActivityCost(activity, activity.getArrTime(), route.getDriver(), route.getVehicle());
+                    costs += cost;
+                    activities.add(new JsonObject()
+                        .set("job_id", jobId)
+                        .set("activity", activity.getName())
+                        .set("time", new JsonObject()
+                            .set("start", Math.round(activity.getArrTime() / 1000.))
+                            .set("end", Math.round(activity.getEndTime() / 1000.))
+                        )
+                        .set("cost", new BigDecimal(cost).setScale(2, RoundingMode.HALF_UP).doubleValue())
+                    );
+                    previousActivity = activity;
                 }
-                for (Job job : route.getTourActivities().getJobs()) {
-                    System.out.println(job.getId());
-                }
-                System.out.println(route.getTourActivities());
-                System.out.println(route.getVehicle().getId());
-                System.out.println(route.getDriver().getId());
+                double cost = vehicleRoutingProblem.getTransportCosts().getTransportCost(previousActivity.getLocation(), route.getEnd().getLocation(), previousActivity.getEndTime(),
+                        route.getDriver(), route.getVehicle());
+                cost += vehicleRoutingProblem.getActivityCosts().getActivityCost(route.getEnd(), route.getEnd().getArrTime(), route.getDriver(), route.getVehicle());
+                costs += cost;
+                activities.add(new JsonObject()
+                    .set("job_id", Json.NULL)
+                    .set("activity", route.getEnd().getName())
+                    .set("time", new JsonObject()
+                        .set("start", Math.round(route.getEnd().getArrTime() / 1000.))
+                        .set("end", Json.NULL)
+                    )
+                    .set("cost", new BigDecimal(cost).setScale(2, RoundingMode.HALF_UP).doubleValue())
+                );
+                routes.add(new JsonObject()
+                    .set("cost", new BigDecimal(costs).setScale(2, RoundingMode.HALF_UP).doubleValue())
+                    .set("activities", activities)
+                );
             }
-            SolutionPrinter.print(vehicleRoutingProblem, bestSolution, SolutionPrinter.Print.VERBOSE);
-            return "";
+            final JsonArray unassignedJobIds = new JsonArray();
+            for (Job job : solution.getUnassignedJobs()) {
+                unassignedJobIds.add(job.getId());
+            }
+            final JsonObject json = new JsonObject()
+                .set("cost", new BigDecimal(solution.getCost()).setScale(2, RoundingMode.HALF_UP).doubleValue())
+                .set("unassigned_job_ids", unassignedJobIds)
+                .set("routes", routes);
+            SolutionPrinter.print(vehicleRoutingProblem, solution, SolutionPrinter.Print.VERBOSE);
+            return json.toString();
         } catch (Exception e) {
             System.out.println(e);
             response.status(500);
