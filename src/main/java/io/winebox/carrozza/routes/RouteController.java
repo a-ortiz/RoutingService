@@ -12,22 +12,22 @@ import com.graphhopper.GHResponse;
 import com.graphhopper.PathWrapper;
 import com.graphhopper.util.Instruction;
 import com.graphhopper.util.shapes.GHPoint;
-import io.winebox.carrozza.models.CZCoordinate;
-import io.winebox.carrozza.models.CZJob;
-import io.winebox.carrozza.models.CZService;
-import io.winebox.carrozza.models.CZShipment;
+import io.winebox.carrozza.models.*;
 import io.winebox.carrozza.services.routing.RoutingEngine;
 import jsprit.analysis.toolbox.GraphStreamViewer;
 import jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import jsprit.core.algorithm.box.SchrimpfFactory;
 import jsprit.core.problem.Location;
+import jsprit.core.problem.Skills;
 import jsprit.core.problem.VehicleRoutingProblem;
 import jsprit.core.problem.cost.VehicleRoutingActivityCosts;
+import jsprit.core.problem.job.Break;
 import jsprit.core.problem.job.Job;
 import jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import jsprit.core.problem.solution.route.VehicleRoute;
 import jsprit.core.problem.solution.route.activity.TourActivity;
 import jsprit.core.problem.vehicle.VehicleImpl;
+import jsprit.core.problem.vehicle.VehicleType;
 import jsprit.core.problem.vehicle.VehicleTypeImpl;
 import jsprit.core.reporting.SolutionPrinter;
 import jsprit.core.util.Solutions;
@@ -44,13 +44,31 @@ import java.util.*;
 public final class RouteController {
 
     private final static class CreateRoutePayload {
+        @Getter @Setter @JsonProperty("vehicle_types")
+        private List<CZVehicleType> vehicleTypes;
+
+        @Getter @Setter @JsonProperty("vehicles")
+        private List<CZVehicle> vehicles;
+
         @Getter @Setter @JsonProperty("jobs")
         private List<CZJob> jobs;
 
         @JsonIgnore
         private boolean isValid() {
-            if (jobs.isEmpty()) return false;
-            for (final CZJob job : jobs) {
+            if (getVehicleTypes().isEmpty()) return false;
+            for (final CZVehicleType vehicleType : getVehicleTypes()) {
+                if (!vehicleType.isValid()) {
+                    return false;
+                }
+            }
+            if (getVehicles().isEmpty()) return false;
+            for (final CZVehicle vehicle : getVehicles()) {
+                if (!vehicle.isValid()) {
+                    return false;
+                }
+            }
+            if (getJobs().isEmpty()) return false;
+            for (final CZJob job : getJobs()) {
                 if (!job.isValid()) {
                     return false;
                 }
@@ -59,8 +77,12 @@ public final class RouteController {
         }
 
         CreateRoutePayload(
-                @JsonProperty(value = "jobs", required = true) List<CZJob> jobs
+            @JsonProperty(value = "vehicle_types", required = true) List<CZVehicleType> vehicleTypes,
+            @JsonProperty(value = "vehicles", required = true) List<CZVehicle> vehicles,
+            @JsonProperty(value = "jobs", required = true) List<CZJob> jobs
         ) {
+            this.vehicleTypes = vehicleTypes;
+            this.vehicles = vehicles;
             this.jobs = jobs;
         }
     }
@@ -82,30 +104,27 @@ public final class RouteController {
                 return "{\"code\": \"BM\"}";
             }
 
-            VehicleTypeImpl vehicleType1 = VehicleTypeImpl.Builder.newInstance("car")
-                    .build();
-
-            VehicleImpl vehicle1 = VehicleImpl.Builder.newInstance("car_1")
-                    .setType(vehicleType1)
-                    .setStartLocation(Location.newInstance(-2.114648, -79.869998))
-                    .setReturnToDepot(false)
-                    .build();
-
-            final List<Job> jobs = new ArrayList();
             final Map<Location, GHPoint> points = new HashMap();
-            for (CZJob job : payload.getJobs()) {
+            final Map<String, VehicleTypeImpl> vehicleTypes = new HashMap();
+            for (final CZVehicleType vehicleType : payload.getVehicleTypes())  {
+                vehicleTypes.put(vehicleType.getId(), vehicleType.toJSprit());
+            }
+            final List<VehicleImpl> vehicles = new ArrayList();
+            for (final CZVehicle vehicle : payload.getVehicles()) {
+                points.put(vehicle.getStartCoordinate().toJSprit(), new GHPoint(vehicle.getStartCoordinate().getLatitude(), vehicle.getStartCoordinate().getLongitude()));
+                VehicleTypeImpl vehicleType = vehicleTypes.get(vehicle.getType());
+                vehicles.add(vehicle.toJSprit(vehicleType));
+            }
+            final List<Job> jobs = new ArrayList();
+            for (final CZJob job : payload.getJobs()) {
                 for (CZCoordinate coordinate : job.getCoordinates()) {
                     points.put(coordinate.toJSprit(), new GHPoint(coordinate.getLatitude(), coordinate.getLongitude()));
                 }
                 jobs.add(job.toJSprit());
             }
-            points.put(Location.newInstance(-2.114648, -79.869998), new GHPoint(-2.114648, -79.869998));
             final VehicleRoutingTransportCostsMatrix.Builder costsMatrixBuilder = VehicleRoutingTransportCostsMatrix.Builder.newInstance(false);
-            for (Map.Entry<Location, GHPoint> fromEntry : points.entrySet()) {
-                for (Map.Entry<Location, GHPoint> toEntry : points.entrySet()) {
-                    System.out.println(fromEntry.getKey());
-                    System.out.println(toEntry.getKey());
-                    System.out.println(fromEntry.getKey().equals(toEntry.getKey()));
+            for (final Map.Entry<Location, GHPoint> fromEntry : points.entrySet()) {
+                for (final Map.Entry<Location, GHPoint> toEntry : points.entrySet()) {
                     if (fromEntry.getKey().equals(toEntry.getKey())) {
                         costsMatrixBuilder.addTransportDistance(fromEntry.getKey().getId(), toEntry.getKey().getId(), 0);
                         costsMatrixBuilder.addTransportDistance(fromEntry.getKey().getId(), toEntry.getKey().getId(), 0);
@@ -114,12 +133,10 @@ public final class RouteController {
                     final GHRequest hopperRequest = new GHRequest(fromEntry.getValue(), toEntry.getValue());
                     final GHResponse hopperResponse = RoutingEngine.getHopper().route(hopperRequest);
                     if (hopperResponse.hasErrors()) {
-                        System.out.println(hopperResponse.getErrors());
                         response.status(500);
                         return "{\"code\": \"UE\"}";
                     }
                     final PathWrapper path = hopperResponse.getBest();
-                    System.out.println(path.getTime());
                     costsMatrixBuilder.addTransportDistance(fromEntry.getKey().getId(), toEntry.getKey().getId(), path.getDistance());
                     costsMatrixBuilder.addTransportTime(fromEntry.getKey().getId(), toEntry.getKey().getId(), path.getTime());
                 }
@@ -128,16 +145,16 @@ public final class RouteController {
             final VehicleRoutingProblem vehicleRoutingProblem = VehicleRoutingProblem.Builder.newInstance()
                 .setRoutingCost(costsMatrix)
                 .addAllJobs(jobs)
-                .addVehicle(vehicle1)
+                .addAllVehicles(vehicles)
                 .build();
-
 
 
             VehicleRoutingAlgorithm algorithm = new SchrimpfFactory().createAlgorithm(vehicleRoutingProblem);
             Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
             VehicleRoutingProblemSolution solution = Solutions.bestOf(solutions);
+
             final JsonArray routes = new JsonArray();
-            for (VehicleRoute route : solution.getRoutes()) {
+            for (final VehicleRoute route : solution.getRoutes()) {
                 double costs = 0;
                 TourActivity previousActivity = route.getStart();
                 final JsonArray activities = new JsonArray();
@@ -150,7 +167,7 @@ public final class RouteController {
                     )
                     .set("cost", 0)
                 );
-                for (TourActivity activity : route.getActivities()) {
+                for (final TourActivity activity : route.getActivities()) {
                     String jobId;
                     if (activity instanceof TourActivity.JobActivity) {
                         jobId = ((TourActivity.JobActivity) activity).getJob().getId();
@@ -186,19 +203,19 @@ public final class RouteController {
                     .set("cost", new BigDecimal(cost).setScale(2, RoundingMode.HALF_UP).doubleValue())
                 );
                 routes.add(new JsonObject()
+                    .set("vehicle", route.getVehicle().getId())
                     .set("cost", new BigDecimal(costs).setScale(2, RoundingMode.HALF_UP).doubleValue())
                     .set("activities", activities)
                 );
             }
             final JsonArray unassignedJobIds = new JsonArray();
-            for (Job job : solution.getUnassignedJobs()) {
+            for (final Job job : solution.getUnassignedJobs()) {
                 unassignedJobIds.add(job.getId());
             }
             final JsonObject json = new JsonObject()
                 .set("cost", new BigDecimal(solution.getCost()).setScale(2, RoundingMode.HALF_UP).doubleValue())
                 .set("unassigned_job_ids", unassignedJobIds)
                 .set("routes", routes);
-            SolutionPrinter.print(vehicleRoutingProblem, solution, SolutionPrinter.Print.VERBOSE);
             return json.toString();
         } catch (Exception e) {
             System.out.println(e);

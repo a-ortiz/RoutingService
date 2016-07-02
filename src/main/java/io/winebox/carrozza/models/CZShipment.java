@@ -33,15 +33,15 @@ public final class CZShipment extends CZJob {
 
     public Shipment toJSprit() {
         return Shipment.Builder.newInstance(getId())
-                .setPickupLocation(getPickupCoordinate().toJSprit())
-                .setDeliveryLocation(getDeliveryCoordinate().toJSprit())
-                .build();
+            .setPickupLocation(getPickupCoordinate().toJSprit())
+            .setDeliveryLocation(getDeliveryCoordinate().toJSprit())
+            .build();
     }
 
     CZShipment(
-            @JsonProperty(value = "id", required = true) String id,
-            @JsonProperty(value = "pickup_coordinate", required = true) CZCoordinate pickupCoordinate,
-            @JsonProperty(value = "delivery_coordinate", required = true)  CZCoordinate deliveryCoordinate
+        @JsonProperty(value = "id", required = true) String id,
+        @JsonProperty(value = "pickup_coordinate", required = true) CZCoordinate pickupCoordinate,
+        @JsonProperty(value = "delivery_coordinate", required = true)  CZCoordinate deliveryCoordinate
     ) {
         super(id);
         this.pickupCoordinate = pickupCoordinate;

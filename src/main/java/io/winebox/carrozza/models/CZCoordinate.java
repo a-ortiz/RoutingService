@@ -26,8 +26,8 @@ public final class CZCoordinate {
     }
 
     CZCoordinate(
-            @JsonProperty(value = "latitude", required = true) double latitude,
-            @JsonProperty(value = "longitude", required = true) double longitude
+        @JsonProperty(value = "latitude", required = true) double latitude,
+        @JsonProperty(value = "longitude", required = true) double longitude
     ) {
         this.latitude = latitude;
         this.longitude = longitude;

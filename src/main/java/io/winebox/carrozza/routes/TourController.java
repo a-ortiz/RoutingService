@@ -33,8 +33,8 @@ public final class TourController {
 
         @JsonIgnore
         private boolean isValid() {
-            if (coordinates.size() <= 1) return false;
-            for (final CZCoordinate coordinate : coordinates) {
+            if (getCoordinates().size() <= 1) return false;
+            for (final CZCoordinate coordinate : getCoordinates()) {
                 if (!coordinate.isValid()) {
                     return false;
                 }
@@ -43,7 +43,7 @@ public final class TourController {
         }
 
         CreateTourPayload(
-                @JsonProperty(value = "points", required = true) List<CZCoordinate> coordinates
+            @JsonProperty(value = "points", required = true) List<CZCoordinate> coordinates
         ) {
             this.coordinates = coordinates;
         }
@@ -66,7 +66,7 @@ public final class TourController {
             }
 
             final List<GHPoint> hopperPoints = new ArrayList();
-            for (CZCoordinate coordinate : payload.getCoordinates()) {
+            for (final CZCoordinate coordinate : payload.getCoordinates()) {
                 hopperPoints.add(new GHPoint(coordinate.getLatitude(), coordinate.getLongitude()));
             }
             final GraphHopper hopper = RoutingEngine.getHopper();
@@ -81,9 +81,9 @@ public final class TourController {
 
             final PathWrapper path = hopperResponse.getBest();
             final JsonArray instructions = new JsonArray();
-            for (Instruction instruction : path.getInstructions()) {
+            for (final Instruction instruction : path.getInstructions()) {
                 final JsonArray points = new JsonArray();
-                for (GHPoint point : instruction.getPoints()) {
+                for (final GHPoint point : instruction.getPoints()) {
                     points.add(new JsonObject()
                         .set("latitude", new BigDecimal(point.getLat()).setScale(5, RoundingMode.HALF_UP).doubleValue())
                         .set("longitude", new BigDecimal(point.getLat()).setScale(5, RoundingMode.HALF_UP).doubleValue())

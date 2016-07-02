@@ -34,8 +34,8 @@ public final class CZService extends CZJob {
     }
 
     CZService(
-            @JsonProperty(value = "id", required = true) String id,
-            @JsonProperty(value = "coordinate", required = true) CZCoordinate coordinate
+        @JsonProperty(value = "id", required = true) String id,
+        @JsonProperty(value = "coordinate", required = true) CZCoordinate coordinate
     ) {
         super(id);
         this.coordinate = coordinate;
