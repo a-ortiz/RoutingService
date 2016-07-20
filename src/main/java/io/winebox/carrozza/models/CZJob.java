@@ -1,7 +1,7 @@
 package io.winebox.carrozza.models;
 
 import com.fasterxml.jackson.annotation.*;
-import jsprit.core.problem.job.Job;
+import com.graphhopper.jsprit.core.problem.job.Job;
 import lombok.*;
 
 import java.util.List;
@@ -21,8 +21,10 @@ public abstract class CZJob {
         return !getId().isEmpty();
     }
 
+    @JsonIgnore
     public abstract List<CZCoordinate> getCoordinates();
 
+    @JsonIgnore
     public abstract Job toJSprit();
 
     CZJob( String id ) {

@@ -17,12 +17,17 @@
         <dependency>
             <groupId>jsprit</groupId>
             <artifactId>jsprit-core</artifactId>
-            <version>1.6.2</version>
+            <version>1.6.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>jsprit</groupId>
-            <artifactId>jsprit-examples</artifactId>
-            <version>1.6.2</version>
+            <artifactId>jsprit-analysis</artifactId>
+            <version>1.6.3-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>jsprit</groupId>
+            <artifactId>jsprit-instances</artifactId>
+            <version>1.6.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.graphhopper</groupId>
@@ -56,4 +61,11 @@
             <!--<version>19.0</version>-->
         <!--</dependency>-->
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>jsprit-snapshots</id>
+            <url>https://github.com/jsprit/mvn-rep/raw/master/snapshots</url>
+        </repository>
+    </repositories>
 </project>

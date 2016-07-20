@@ -3,7 +3,8 @@ package io.winebox.carrozza.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jsprit.core.problem.vehicle.VehicleTypeImpl;
+//import jsprit.core.problem.vehicle.VehicleTypeImpl;
+import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,6 +21,7 @@ public final class CZVehicleType {
         return true;
     }
 
+    @JsonIgnore
     public VehicleTypeImpl toJSprit() {
         return VehicleTypeImpl.Builder.newInstance(getId()).build();
     }

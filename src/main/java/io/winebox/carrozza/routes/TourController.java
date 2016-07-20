@@ -71,6 +71,10 @@ public final class TourController {
             }
             final GraphHopper hopper = RoutingEngine.getHopper();
             final GHRequest hopperRequest = new GHRequest(hopperPoints);
+//            hopperRequest.getHints().put("calcPoints", false);
+//            hopperRequest.getHints().put("instructions", false);
+//            hopperRequest.getHints().put("elevation", false);
+//            hopperRequest.setWeighting("fastest");
             final GHResponse hopperResponse = hopper.route(hopperRequest);
             if (hopperResponse.hasErrors()) {
                 response.status(500);
@@ -80,6 +84,7 @@ public final class TourController {
             final Translation translation = hopper.getTranslationMap().getWithFallBack(hopperRequest.getLocale());
 
             final PathWrapper path = hopperResponse.getBest();
+
             final JsonArray instructions = new JsonArray();
             for (final Instruction instruction : path.getInstructions()) {
                 final JsonArray points = new JsonArray();
