@@ -2,13 +2,10 @@ package io.winebox.carrozza.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-//import jsprit.core.problem.job.Job;
-//import jsprit.core.problem.job.Service;
 import com.graphhopper.jsprit.core.problem.job.Service;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

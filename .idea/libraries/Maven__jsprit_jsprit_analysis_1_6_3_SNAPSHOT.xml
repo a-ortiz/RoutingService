@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="Maven: jsprit:jsprit-analysis:1.6.3-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/jsprit/jsprit-analysis/1.6.3-SNAPSHOT/jsprit-analysis-1.6.3-20160706.180527-15.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/jsprit/jsprit-analysis/1.6.3-SNAPSHOT/jsprit-analysis-1.6.3-20160718.121324-18.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/jsprit/jsprit-analysis/1.6.3-SNAPSHOT/jsprit-analysis-1.6.3-20160706.180527-15-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/jsprit/jsprit-analysis/1.6.3-SNAPSHOT/jsprit-analysis-1.6.3-20160718.121324-18-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$MAVEN_REPOSITORY$/jsprit/jsprit-analysis/1.6.3-SNAPSHOT/jsprit-analysis-1.6.3-20160706.180527-15-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/jsprit/jsprit-analysis/1.6.3-SNAPSHOT/jsprit-analysis-1.6.3-20160718.121324-18-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

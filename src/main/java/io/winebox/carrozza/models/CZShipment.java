@@ -1,11 +1,7 @@
 package io.winebox.carrozza.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-//import jsprit.core.problem.job.Job;
-//import jsprit.core.problem.job.Service;
-//import jsprit.core.problem.job.Shipment;
 import com.graphhopper.jsprit.core.problem.job.Shipment;
 import lombok.Getter;
 import lombok.Setter;

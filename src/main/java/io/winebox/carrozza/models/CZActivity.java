@@ -3,12 +3,8 @@ package io.winebox.carrozza.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.graphhopper.jsprit.core.problem.job.Shipment;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Arrays;
-import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class CZActivity {

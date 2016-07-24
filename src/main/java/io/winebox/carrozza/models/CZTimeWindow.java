@@ -2,9 +2,7 @@ package io.winebox.carrozza.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindow;
-import com.graphhopper.jsprit.core.util.Coordinate;
 import lombok.Getter;
 import lombok.Setter;
 

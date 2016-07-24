@@ -2,6 +2,7 @@ package io.winebox.carrozza;
 
 import io.winebox.carrozza.routes.RouteController;
 import io.winebox.carrozza.routes.TourController;
+import io.winebox.carrozza.services.routing.CZRoutingService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +13,7 @@ import static spark.Spark.post;
 public final class App {
 
     public final static void main( String[] args ) {
+        CZRoutingService.getInstance().run();
         System.out.println("Hello, world!");
 //        Runnable task = () -> {
 //            String threadName = Thread.currentThread().getName();

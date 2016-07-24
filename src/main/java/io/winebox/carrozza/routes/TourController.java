@@ -10,10 +10,12 @@ import com.graphhopper.GraphHopper;
 import com.graphhopper.PathWrapper;
 import com.graphhopper.util.Helper;
 import com.graphhopper.util.Instruction;
+import com.graphhopper.util.Parameters;
 import com.graphhopper.util.Translation;
 import com.graphhopper.util.shapes.GHPoint;
 
 import io.winebox.carrozza.models.CZCoordinate;
+import io.winebox.carrozza.services.routing.CZRoutingService;
 import io.winebox.carrozza.services.routing.RoutingEngine;
 
 import java.math.BigDecimal;
@@ -69,20 +71,21 @@ public final class TourController {
             for (final CZCoordinate coordinate : payload.getCoordinates()) {
                 hopperPoints.add(new GHPoint(coordinate.getLatitude(), coordinate.getLongitude()));
             }
-            final GraphHopper hopper = RoutingEngine.getHopper();
+            final GraphHopper hopper = CZRoutingService.getInstance().getHopper();
             final GHRequest hopperRequest = new GHRequest(hopperPoints);
 //            hopperRequest.getHints().put("calcPoints", false);
 //            hopperRequest.getHints().put("instructions", false);
 //            hopperRequest.getHints().put("elevation", false);
-//            hopperRequest.setWeighting("fastest");
+            hopperRequest.setWeighting("fastest");
+            hopperRequest.setVehicle("car");
             final GHResponse hopperResponse = hopper.route(hopperRequest);
             if (hopperResponse.hasErrors()) {
+                System.out.println(hopperResponse.getErrors());
                 response.status(500);
                 return "{\"code\": \"UE\"}";
             }
 
             final Translation translation = hopper.getTranslationMap().getWithFallBack(hopperRequest.getLocale());
-
             final PathWrapper path = hopperResponse.getBest();
 
             final JsonArray instructions = new JsonArray();
@@ -91,7 +94,7 @@ public final class TourController {
                 for (final GHPoint point : instruction.getPoints()) {
                     points.add(new JsonObject()
                         .set("latitude", new BigDecimal(point.getLat()).setScale(5, RoundingMode.HALF_UP).doubleValue())
-                        .set("longitude", new BigDecimal(point.getLat()).setScale(5, RoundingMode.HALF_UP).doubleValue())
+                        .set("longitude", new BigDecimal(point.getLon()).setScale(5, RoundingMode.HALF_UP).doubleValue())
                     );
                 }
                 instructions.add(new JsonObject()
@@ -109,6 +112,7 @@ public final class TourController {
                 );
             return json.toString();
         } catch (Exception e) {
+            System.out.println(e);
             response.status(500);
             return "{\"code\": \"UE\"}";
         }

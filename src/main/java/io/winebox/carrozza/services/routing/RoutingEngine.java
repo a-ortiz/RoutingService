@@ -11,7 +11,7 @@ public final class RoutingEngine {
         hopper = new GraphHopper().forServer();
         hopper.setOSMFile("input/planet.osm.pbf");
         hopper.setGraphHopperLocation("output/graphhopper");
-        hopper.setEncodingManager(new EncodingManager(EncodingManager.CAR));
+        hopper.setEncodingManager(new EncodingManager("car"));
         hopper.importOrLoad();
     }
 
@@ -19,3 +19,15 @@ public final class RoutingEngine {
         return RoutingEngine.hopper;
     }
 }
+
+
+//public static ThreadSafeSingleton getInstanceUsingDoubleLocking(){
+//    if(instance == null){
+//        synchronized (ThreadSafeSingleton.class) {
+//            if(instance == null){
+//                instance = new ThreadSafeSingleton();
+//            }
+//        }
+//    }
+//    return instance;
+//}

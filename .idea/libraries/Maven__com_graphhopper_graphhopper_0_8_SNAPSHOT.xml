@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.graphhopper:graphhopper:0.8-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/graphhopper/graphhopper/0.8-SNAPSHOT/graphhopper-0.8-20160715.100107-33.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/graphhopper/graphhopper/0.8-SNAPSHOT/graphhopper-0.8-20160715.100107-33-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/graphhopper/graphhopper/0.8-SNAPSHOT/graphhopper-0.8-20160715.100107-33-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
